@@ -39,7 +39,6 @@ import {StudioServerConnectionCtx} from './client-id';
 import {CURRENT_COLOR} from './colors';
 import {getFileManagerName} from './get-file-manager-name';
 import {getGitMenuItem} from './get-git-menu-item';
-import {useMobileLayout} from './mobile-layout';
 import {openInEditor, preloadCompositionComponentInfo} from './open-in-editor';
 import {pickColor} from './pick-color';
 import {getStudioAskAIEnabled} from './studio-runtime-config';
@@ -294,6 +293,7 @@ const getRenderMenuItems = ({
 export const useMenuStructure = (
 	closeMenu: () => void,
 	readOnlyStudio: boolean,
+	compact: boolean,
 ) => {
 	const {setSelectedModal} = useContext(SetSelectedModalContext);
 	const {checkerboard, setCheckerboard} = useContext(CheckerboardContext);
@@ -350,7 +350,6 @@ export const useMenuStructure = (
 		(s) => String(size.size) === String(s.size),
 	);
 
-	const mobileLayout = useMobileLayout();
 	const currentComposition = useMemo(() => {
 		if (canvasContent === null || canvasContent.type !== 'composition') {
 			return null;
@@ -1135,27 +1134,35 @@ export const useMenuStructure = (
 				],
 			},
 		].filter(Internals.truthy);
-		if (mobileLayout) {
+		if (compact) {
 			struct = [
 				{
 					...struct[0],
 					items: [
-						...struct.slice(1).map((s) => {
-							return {
-								...s,
-								keyHint: null,
-								onClick: () => undefined,
-								type: 'item' as const,
-								value: s.id,
-								leftItem: null,
-								subMenu: {
-									items: s.items,
-									leaveLeftSpace: true,
-									preselectIndex: 0,
-								},
-								quickSwitcherLabel: null,
-							} as SelectionItem;
-						}),
+						...struct
+							.slice(1)
+							.filter((s) => s.id !== 'file' && s.id !== 'composition')
+							.map((s) => {
+								return {
+									...s,
+									keyHint: null,
+									onClick: () => undefined,
+									type: 'item' as const,
+									value: s.id,
+									leftItem: null,
+									subMenu: {
+										items:
+											s.id === 'tools'
+												? s.items.filter(
+														(item) => item.id !== 'install-packages',
+													)
+												: s.items,
+										leaveLeftSpace: true,
+										preselectIndex: 0,
+									},
+									quickSwitcherLabel: null,
+								} as SelectionItem;
+							}),
 						...struct[0].items,
 					],
 				},
@@ -1181,7 +1188,7 @@ export const useMenuStructure = (
 		checkerboard,
 		isFullscreenSupported,
 		remotion_packageManager,
-		mobileLayout,
+		compact,
 		defaultEditorId,
 		defaultEditorName,
 		keyboardShortcutsDisabled,

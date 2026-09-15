@@ -113,7 +113,7 @@ export const MenuToolbar: React.FC<{
 		setSelected(null);
 	}, []);
 
-	const structure = useMenuStructure(closeMenu, readOnlyStudio);
+	const structure = useMenuStructure(closeMenu, readOnlyStudio, true);
 
 	const menus = useMemo(() => {
 		return structure.map((s) => s.id);
